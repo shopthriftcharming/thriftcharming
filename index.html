@@ -133,7 +133,7 @@ textarea{min-height:132px;resize:vertical;line-height:1.6}
     <div class="eyebrow">First Access</div>
     <h3 id="popupTitle">The Good Stuff Goes Fast</h3>
     <p>Vintage finds. Designer gems. Auction drops. No spam.</p>
-    <form id="signupForm">
+    <form id="signupForm" action="https://formspree.io/f/mkoeazpa" method="POST">
       <div class="field"><label for="signupName">Name</label><input id="signupName" name="name" type="text" placeholder="Your name" autocomplete="name" /></div>
       <div class="field"><label for="signupEmail">Email *</label><input id="signupEmail" name="email" type="email" placeholder="you@email.com" autocomplete="email" required /></div>
       <button class="submit" type="submit" id="signupBtn">Join the List</button>
@@ -190,7 +190,7 @@ textarea{min-height:132px;resize:vertical;line-height:1.6}
         <h2>Get in Touch</h2>
         <p>Questions, item inquiries, order support, collaborations, and styling/media inquiries can all start here.</p>
       </div>
-      <form id="contactForm">
+      <form id="contactForm" action="https://formspree.io/f/mkoeazpa" method="POST">
         <div class="row">
           <div class="field"><label for="name">Name *</label><input id="name" name="name" type="text" placeholder="Your name" autocomplete="name" required /></div>
           <div class="field"><label for="email">Email *</label><input id="email" name="email" type="email" placeholder="you@email.com" autocomplete="email" required /></div>
@@ -247,21 +247,36 @@ Message:
   return 'mailto:' + CONTACT_EMAIL + '?subject=' + subject + '&body=' + body;
 }
 async function sendFormspree(data){
+  const payload = {
+    name: data.name,
+    email: data.email,
+    phone: data.phone,
+    reason: data.reason,
+    message: data.message,
+    source: data.source,
+    _subject: '👑 New Thrift Charming Inquiry from ' + (data.name || data.email || 'Website Visitor'),
+    _replyto: data.email
+  };
+
   const res = await fetch(FORMSPREE_ENDPOINT, {
-    method:'POST',
-    headers:{ 'Content-Type':'application/json', 'Accept':'application/json' },
-    body:JSON.stringify({
-      name:data.name,
-      email:data.email,
-      phone:data.phone,
-      reason:data.reason,
-      message:data.message,
-      source:data.source,
-      _subject:'New Thrift Charming Inquiry from ' + (data.name || data.email || 'Website Visitor'),
-      _replyto:data.email
-    })
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    },
+    body: JSON.stringify(payload)
   });
-  if(!res.ok) throw new Error('Formspree failed');
+
+  let responseData = {};
+  try {
+    responseData = await res.json();
+  } catch (e) {}
+
+  if (!res.ok) {
+    console.error('Formspree error:', responseData);
+    throw new Error('Formspree failed');
+  }
+
   return true;
 }
 async function sendNotionWebhook(data){
